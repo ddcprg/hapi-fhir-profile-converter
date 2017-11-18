@@ -13,48 +13,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.systematic.healthcare.fhir.generator;
-
-import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.model.dstu2.composite.ElementDefinitionDt;
-import ca.uhn.fhir.model.dstu2.resource.StructureDefinition;
-import ca.uhn.fhir.parser.IParser;
-import org.apache.commons.io.IOUtils;
+package ca.uhn.fhir.contrib.generator;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+
+import org.apache.commons.io.IOUtils;
+import org.hl7.fhir.dstu3.model.ElementDefinition;
+import org.hl7.fhir.dstu3.model.StructureDefinition;
+
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
 
 public class UrlStructureDefinitionProvider implements StructureDefinitionProvider {
     private final FhirContext context;
     private final String outPackage;
     private final String structureUrl;
 
-    public UrlStructureDefinitionProvider(String outPackage, String structureUrl) {
+    public UrlStructureDefinitionProvider(final String outPackage, final String structureUrl) {
         this.outPackage = outPackage;
         this.structureUrl = structureUrl;
         context = FhirContext.forDstu2();
     }
 
-    public String getOutPackage() {
+    @Override
+	public String getOutPackage() {
         return outPackage;
     }
 
     @Override
     public StructureDefinition getDefinition() throws IOException {
-        IParser parser = context.newXmlParser();
+        final IParser parser = context.newXmlParser();
         return parser.parseResource(StructureDefinition.class, urlToContentString(new URL(structureUrl)));
     }
 
     @Override
-    public StructureDefinition provideReferenceDefinition(ElementDefinitionDt element) throws IOException {
-        String urlStr = element.getTypeFirstRep().getProfileFirstRep().getValue();
-        URL url = new URL(urlStr);
-        IParser parser = context.newXmlParser();
+    public StructureDefinition provideReferenceDefinition(final ElementDefinition element) throws IOException {
+        final String urlStr = element.getTypeFirstRep().getProfile();
+        final URL url = new URL(urlStr);
+        final IParser parser = context.newXmlParser();
         return parser.parseResource(StructureDefinition.class, urlToContentString(url));
     }
 
-    private String urlToContentString(URL url) throws IOException {
+    private String urlToContentString(final URL url) throws IOException {
         try (InputStream in = url.openStream()) {
             return new String(IOUtils.toByteArray(in), "UTF-8");
         }

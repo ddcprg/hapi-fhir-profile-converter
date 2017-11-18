@@ -13,50 +13,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.systematic.healthcare.fhir.generator;
-
-import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.model.dstu2.composite.ElementDefinitionDt;
-import ca.uhn.fhir.model.dstu2.resource.StructureDefinition;
-import ca.uhn.fhir.parser.IParser;
+package ca.uhn.fhir.contrib.generator;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+
+import org.hl7.fhir.dstu3.model.ElementDefinition;
+import org.hl7.fhir.dstu3.model.StructureDefinition;
+
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
 
 public class FileStructureDefinitionProvider implements StructureDefinitionProvider {
     private final FhirContext context;
     private final String outPackage;
     private final File structureFile;
 
-    public FileStructureDefinitionProvider(String outPackage, File structureFile) {
+    public FileStructureDefinitionProvider(final String outPackage, final File structureFile) {
         this.outPackage = outPackage;
         this.structureFile = structureFile;
-        context = FhirContext.forDstu2();
+        context = FhirContext.forDstu3();
     }
 
-    public String getOutPackage() {
+    @Override
+	public String getOutPackage() {
         return outPackage;
     }
 
     @Override
     public StructureDefinition getDefinition() throws IOException {
-        IParser parser = context.newXmlParser();
+        final IParser parser = context.newJsonParser();
         return parser.parseResource(StructureDefinition.class, fileToContentString(structureFile));
     }
 
     @Override
-    public StructureDefinition provideReferenceDefinition(ElementDefinitionDt element) throws IOException {
-        String fileStr = element.getTypeFirstRep().getProfileFirstRep().getValue().substring(element.getTypeFirstRep().getProfileFirstRep().getValue().lastIndexOf('/') + 1) + ".xml";
-        File file = new File(structureFile.getParent(), fileStr);
+    public StructureDefinition provideReferenceDefinition(final ElementDefinition element) throws IOException {
+        final String fileStr = element.getTypeFirstRep().getProfile().substring(element.getTypeFirstRep().getProfile().lastIndexOf('/') + 1) + ".xml";
+        final File file = new File(structureFile.getParent(), fileStr);
         if (!file.isFile()) {
             return null;
         }
-        IParser parser = context.newXmlParser();
+        final IParser parser = context.newXmlParser();
         return parser.parseResource(StructureDefinition.class, fileToContentString(file));
     }
 
-    private String fileToContentString(File file) throws IOException {
+    private String fileToContentString(final File file) throws IOException {
         return new String(Files.readAllBytes(file.toPath()), "UTF-8");
     }
 }

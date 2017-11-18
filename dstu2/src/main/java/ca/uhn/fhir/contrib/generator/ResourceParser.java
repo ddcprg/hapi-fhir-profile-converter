@@ -13,41 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.systematic.healthcare.fhir.generator;
-
-import ca.uhn.fhir.model.api.BaseIdentifiableElement;
-import ca.uhn.fhir.model.api.IResource;
-import ca.uhn.fhir.model.api.annotation.Child;
-import ca.uhn.fhir.model.dstu2.resource.Observation;
+package ca.uhn.fhir.contrib.generator;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
+
+import org.hl7.fhir.dstu3.model.Observation;
+import org.hl7.fhir.instance.model.api.IBaseResource;
+
+import ca.uhn.fhir.model.api.BaseIdentifiableElement;
+import ca.uhn.fhir.model.api.annotation.Child;
 
 public class ResourceParser {
 
     public static final String FIRST_REP = "FirstRep";
     public static final String ELEMENT = "Element";
 
-    public static void main(String[] args) {
-        for (Map.Entry<String, FieldInfo> i : new ResourceParser().parseResource(Observation.class).entrySet()) {
+    public static void main(final String[] args) {
+        for (final Map.Entry<String, FieldInfo> i : new ResourceParser().parseResource(Observation.class).entrySet()) {
             System.out.println(i.getKey() + " " + i.getValue());
         }
 
     }
 
-    public Map<String, FieldInfo> parseElement(Class<? extends BaseIdentifiableElement> element) {
-        Stack<Class<?>> stack = parseStack(element);
+    public Map<String, FieldInfo> parseElement(final Class<? extends BaseIdentifiableElement> element) {
+        final Stack<Class<?>> stack = parseStack(element);
         return parseAnnotatedFields(stack);
     }
 
-    public Map<String, FieldInfo> parseResource(Class<? extends IResource> resource) {
-        Stack<Class<?>> stack = parseStack(resource);
+    public Map<String, FieldInfo> parseResource(final Class<? extends IBaseResource> resource) {
+        final Stack<Class<?>> stack = parseStack(resource);
         return parseAnnotatedFields(stack);
     }
 
-    private Stack<Class<?>> parseStack(Class<?> resource) {
-        Stack<Class<?>> hierarchy = new Stack<>();
+    private Stack<Class<?>> parseStack(final Class<?> resource) {
+        final Stack<Class<?>> hierarchy = new Stack<>();
         Class<?> clazz = resource;
         do {
             hierarchy.push(clazz);
@@ -56,24 +61,24 @@ public class ResourceParser {
         return hierarchy;
     }
 
-    private Map<String, FieldInfo> parseAnnotatedFields(Stack<Class<?>> stack) {
-        Map<String, FieldInfo> fieldNameToFieldInfo = new HashMap<>();
+    private Map<String, FieldInfo> parseAnnotatedFields(final Stack<Class<?>> stack) {
+        final Map<String, FieldInfo> fieldNameToFieldInfo = new HashMap<>();
         while (!stack.isEmpty()) {
-            Class<?> cls = stack.pop();
-            for (Field field : cls.getDeclaredFields()) {
-                Child child = field.getAnnotation(Child.class);
+            final Class<?> cls = stack.pop();
+            for (final Field field : cls.getDeclaredFields()) {
+                final Child child = field.getAnnotation(Child.class);
                 if (child != null) {
-                    FieldInfo fi = new FieldInfo(field.getName(), field);
-                    String fieldName = fi.getLowercaseName();
+                    final FieldInfo fi = new FieldInfo(field.getName(), field);
+                    final String fieldName = fi.getLowercaseName();
                     if (fieldNameToFieldInfo.containsKey(fieldName)) {
-                        FieldInfo fiOld = fieldNameToFieldInfo.get(fieldName);
+                        final FieldInfo fiOld = fieldNameToFieldInfo.get(fieldName);
                         fi.setParent(fiOld);
                     }
                     fieldNameToFieldInfo.put(fieldName, fi);
                 }
             }
 
-            for (Method i : cls.getMethods()) {
+            for (final Method i : cls.getMethods()) {
                 String name = i.getName();
                 if (name.startsWith("get") || name.startsWith("set") || name.startsWith("add")) {
                     name = name.substring(3);
@@ -100,12 +105,12 @@ public class ResourceParser {
 
         private final Child child;
         private FieldInfo parent;
-        private String lowercaseName;
-        private String origFieldName;
-        private Field field;
-        private List<Method> methods = new ArrayList<>();
+        private final String lowercaseName;
+        private final String origFieldName;
+        private final Field field;
+        private final List<Method> methods = new ArrayList<>();
 
-        public FieldInfo(String nameArg, Field field) {
+        public FieldInfo(final String nameArg, final Field field) {
             if (!nameArg.startsWith("my")) {
                 throw new IllegalArgumentException("FHIR fields should start with my, was: " + nameArg);
             }
@@ -119,7 +124,7 @@ public class ResourceParser {
             this.field = field;
         }
 
-        public void setParent(FieldInfo parent) {
+        public void setParent(final FieldInfo parent) {
             this.parent = parent;
         }
 
@@ -139,7 +144,7 @@ public class ResourceParser {
             return lowercaseName;
         }
 
-        public void addMethod(Method method) {
+        public void addMethod(final Method method) {
             methods.add(method);
         }
 

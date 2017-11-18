@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.systematic.healthcare.fhir.generator;
+package ca.uhn.fhir.contrib.generator;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -23,20 +23,19 @@ import org.jboss.forge.roaster.model.source.JavaClassSource;
 public class Main {
 
 
-	public static void main(String [] args) throws Exception {
-		String someOutputPackageName = "com.systematic.healthcare.fhir.generator.generated";
-		String [] fileNames = {"FunctioningCondition.xml"};
+	public static void main(final String [] args) throws Exception {
+		final String someOutputPackageName = "ca.uhn.fhir.contrib.generator.generated";
+		final String [] fileNames = {"nl-core-patient.json"};
 		
-		String someReadingDirectory = new File(".").getAbsolutePath() + "\\dstu2\\src\\test\\resources";
-		String someWritingDirectory = new File(".").getAbsolutePath() + "\\dstu2\\src\\test\\java\\" + someOutputPackageName.replaceAll("\\.", "/");
+		final String someReadingDirectory = new File(".").getAbsolutePath() + "/src/test/resources";
+		final String someWritingDirectory = new File(".").getAbsolutePath() + "/src/test/java/" + someOutputPackageName.replaceAll("\\.", "/");
 		new File(someWritingDirectory).mkdirs();
 		
-
-        for (String s : fileNames) {
-            StructureDefinitionProvider provider = new FileStructureDefinitionProvider(
+        for (final String s : fileNames) {
+            final StructureDefinitionProvider provider = new FileStructureDefinitionProvider(
                     someOutputPackageName,
                     new File(someReadingDirectory, s));
-            JavaClassSource javaClass = Generator.generate(provider);
+            final JavaClassSource javaClass = Generator.generate(provider);
             Files.write(new File(new File(someWritingDirectory), javaClass.getName()+".java").toPath(), javaClass.toString().getBytes("UTF-8"));
         }
         System.out.println("Success");

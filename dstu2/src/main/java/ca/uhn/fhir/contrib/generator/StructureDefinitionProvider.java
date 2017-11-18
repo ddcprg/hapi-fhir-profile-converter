@@ -13,17 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.systematic.healthcare.fhir.generator;
+package ca.uhn.fhir.contrib.generator;
 
-import ca.uhn.fhir.model.dstu2.composite.ElementDefinitionDt;
-import ca.uhn.fhir.model.dstu2.resource.StructureDefinition;
 
 import java.io.IOException;
+
+import org.hl7.fhir.dstu3.model.ElementDefinition;
+import org.hl7.fhir.dstu3.model.StructureDefinition;
 
 public interface StructureDefinitionProvider {
     String getOutPackage();
 
     StructureDefinition getDefinition() throws IOException;
 
-    StructureDefinition provideReferenceDefinition(ElementDefinitionDt element) throws IOException;
+    StructureDefinition provideReferenceDefinition(ElementDefinition element) throws IOException;
 }
