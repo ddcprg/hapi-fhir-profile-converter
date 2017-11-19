@@ -52,7 +52,7 @@ public class FileStructureDefinitionProvider implements StructureDefinitionProvi
         final String fileStr = element.getTypeFirstRep().getProfile().substring(element.getTypeFirstRep().getProfile().lastIndexOf('/') + 1) + ".xml";
         final File file = new File(structureFile.getParent(), fileStr);
         if (!file.isFile()) {
-            return null;
+            throw new NullPointerException("File not not found: " + file.getAbsolutePath());
         }
         final IParser parser = context.newXmlParser();
         return parser.parseResource(StructureDefinition.class, fileToContentString(file));

@@ -111,10 +111,10 @@ public class ResourceParser {
         private final List<Method> methods = new ArrayList<>();
 
         public FieldInfo(final String nameArg, final Field field) {
-            if (!nameArg.startsWith("my")) {
-                throw new IllegalArgumentException("FHIR fields should start with my, was: " + nameArg);
-            }
-            this.origFieldName = nameArg.substring(2);
+//            if (!nameArg.startsWith("my")) {
+//                throw new IllegalArgumentException("FHIR fields should start with my, was: " + nameArg);
+//            }
+            this.origFieldName = nameArg;//nameArg.substring(2);
             this.lowercaseName = origFieldName.toLowerCase();
             this.child = field.getAnnotation(Child.class);
             if (!lowercaseName.equalsIgnoreCase(child.name())) {

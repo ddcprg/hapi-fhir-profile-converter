@@ -56,7 +56,6 @@ public class Generator {
     private static final String STU3_PACKAGE = "org.hl7.fhir.dstu3.model";
     private static final String STU3_RESOURCE_PACKAGE = STU3_PACKAGE + "";
     private static final String STU3_COMPOSITE_PACKAGE = STU3_PACKAGE + ".composite";
-    private static final String STU3_PRIMITIVE_PACKAGE = "ca.uhn.fhir.model.primitive";
     
     public static final String HL7_FHIR_REFERENCE_URL_START = "http://hl7.org/fhir";
 
@@ -293,7 +292,7 @@ public class Generator {
             if (element.getSliceName() == null) {
                 return;
             }
-            final FieldSource<JavaClassSource> field = javaClass.addField().setName("my" + StringUtils.capitalize(element.getSliceName())).setPrivate();
+            final FieldSource<JavaClassSource> field = javaClass.addField().setName(element.getSliceName()).setPrivate();
             extensionFieldsAdded.add(field);
             final Class<?> extensionType = getExtensionType(element, resolver);
             if (extensionType != null) {
@@ -324,7 +323,7 @@ public class Generator {
     private Class<?> getExtensionType(final ElementDefinition element, final StructureDefinitionProvider resolver) throws IOException {
         final StructureDefinition def = resolver.provideReferenceDefinition(element);
         for (final ElementDefinition el : def.getDifferential().getElement()) {
-            if (el.getPath().equals("Extension.value[x]")) {
+            if (el.getPath().startsWith("Extension.value")) {
                 return getSTU3ClassType(el.getTypeFirstRep());
             }
         }
@@ -337,8 +336,8 @@ public class Generator {
         childAnnotation.setLiteralValue("min", element.getMin() + "");
         childAnnotation.setLiteralValue("max", "*".equals(element.getMax()) ? "Child.MAX_UNLIMITED" : element.getMax());
         childAnnotation.setLiteralValue("order", isExtension ? "Child.ORDER_UNKNOWN" : "Child.REPLACE_PARENT");
-        childAnnotation.setLiteralValue("summary", element.getIsSummaryElement() != null ? element.getIsSummaryElement().asStringValue() : "false");
-        childAnnotation.setLiteralValue("modifier", element.getIsModifierElement() != null ? element.getIsModifierElement().asStringValue() : "false");
+        childAnnotation.setLiteralValue("summary", element.getIsSummaryElement() != null ? "true" : "false");
+        childAnnotation.setLiteralValue("modifier", element.getIsModifierElement() != null ? "true" : "false");
 
         return childAnnotation;
     }
@@ -389,9 +388,9 @@ public class Generator {
     private static Class<?> getSTU3ClassType(@Nullable final ElementDefinition.TypeRefComponent input) {
         try {
             try {
-                return Class.forName(STU3_PRIMITIVE_PACKAGE + "." + StringUtils.capitalize(input.getCode()) + "Dt");
+                return Class.forName(STU3_RESOURCE_PACKAGE + "." + StringUtils.capitalize(input.getCode()));
             } catch (final ClassNotFoundException ee) {
-                return Class.forName(STU3_COMPOSITE_PACKAGE + "." + input.getCode() + "Dt");
+                return Class.forName(STU3_RESOURCE_PACKAGE + "." + input.getCode());
             }
         } catch (final ClassNotFoundException e) {
             throw new IllegalStateException("Cannot locate class", e);
