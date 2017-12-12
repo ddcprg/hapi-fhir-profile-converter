@@ -28,9 +28,11 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.dstu3.model.ElementDefinition;
+import org.hl7.fhir.dstu3.model.ElementDefinition.TypeRefComponent;
 import org.hl7.fhir.dstu3.model.Reference;
 import org.hl7.fhir.dstu3.model.StructureDefinition;
 import org.hl7.fhir.dstu3.model.UriType;
+import org.hl7.fhir.exceptions.FHIRException;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.source.AnnotationSource;
 import org.jboss.forge.roaster.model.source.FieldSource;
@@ -40,6 +42,7 @@ import org.jboss.forge.roaster.model.source.MethodSource;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 
 import ca.uhn.fhir.model.api.IDatatype;
@@ -289,6 +292,10 @@ public class Generator {
         if (element.getType().size() > 1) {
             throw new IllegalStateException("WTF");
         } else {
+        	
+        		//unnamed slicing is currently not handled
+//        		if(!element.getSlicing().isEmpty())
+        	
             if (element.getSliceName() == null) {
                 return;
             }
@@ -320,21 +327,28 @@ public class Generator {
         field.getJavaDoc().addTagValue("@deprecated", errMsg);
     }
 
-    private Class<?> getExtensionType(final ElementDefinition element, final StructureDefinitionProvider resolver) throws IOException {
+    private Class<?> getExtensionType(final ElementDefinition element, final StructureDefinitionProvider resolver) throws IOException, FHIRException {
         final StructureDefinition def = resolver.provideReferenceDefinition(element);
         for (final ElementDefinition el : def.getDifferential().getElement()) {
-            if (el.getPath().startsWith("Extension.value")) {
+//        	final int uppercardinality = el.getMaxValueIntegerType() != null ? el.getMaxValueIntegerType().getValue() : 0;
+//        	System.out.println(uppercardinality);
+            if (el.getPath().startsWith("Extension.value") && !el.getPath().startsWith("Extension.value[x]")) {
                 return getSTU3ClassType(el.getTypeFirstRep());
             }
+            //Sub extensions
+            else if(el.getPath().startsWith("Extension.extension") && el.getPath().contains("value"))
+            {
+            		return getSTU3ClassType(el.getTypeFirstRep());
+            }
         }
-        throw new IllegalArgumentException("Could not find name for extension: " + element);
+        throw new IllegalArgumentException("Could not find extension type(s) for : " + element);
     }
 
     private AnnotationSource<JavaClassSource> addFieldChildAnnotation(final ElementDefinition element, final String name, final FieldSource<JavaClassSource> field, final boolean isExtension) {
         final AnnotationSource<JavaClassSource> childAnnotation = field.addAnnotation(Child.class);
         childAnnotation.setStringValue("name", name);
         childAnnotation.setLiteralValue("min", element.getMin() + "");
-        childAnnotation.setLiteralValue("max", "*".equals(element.getMax()) ? "Child.MAX_UNLIMITED" : element.getMax());
+        childAnnotation.setLiteralValue("max", "*".equals(element.getMax()) ? "Child.MAX_UNLIMITED" : Strings.isNullOrEmpty(element.getMax()) ? "" : element.getMax());
         childAnnotation.setLiteralValue("order", isExtension ? "Child.ORDER_UNKNOWN" : "Child.REPLACE_PARENT");
         childAnnotation.setLiteralValue("summary", element.getIsSummaryElement() != null ? "true" : "false");
         childAnnotation.setLiteralValue("modifier", element.getIsModifierElement() != null ? "true" : "false");
