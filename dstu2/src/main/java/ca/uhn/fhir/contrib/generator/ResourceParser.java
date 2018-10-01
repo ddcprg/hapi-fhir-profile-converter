@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Stack;
 
 import org.hl7.fhir.dstu3.model.Observation;
+import org.hl7.fhir.dstu3.model.Patient;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 
 import ca.uhn.fhir.model.api.BaseIdentifiableElement;
@@ -35,7 +36,7 @@ public class ResourceParser {
     public static final String ELEMENT = "Element";
 
     public static void main(final String[] args) {
-        for (final Map.Entry<String, FieldInfo> i : new ResourceParser().parseResource(Observation.class).entrySet()) {
+        for (final Map.Entry<String, FieldInfo> i : new ResourceParser().parseResource(Patient.class).entrySet()) {
             System.out.println(i.getKey() + " " + i.getValue());
         }
 

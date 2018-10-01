@@ -26,9 +26,11 @@ public class Main {
 	public static void main(final String [] args) throws Exception {
 		final String someOutputPackageName = "ca.uhn.fhir.contrib.generator.generated";
 		final String [] fileNames = {"nl-core-patient.json"};
+
+		System.out.println("Reading relative from: "  +new File(".").getAbsolutePath());
 		
-		final String someReadingDirectory = new File(".").getAbsolutePath() + "/src/test/resources";
-		final String someWritingDirectory = new File(".").getAbsolutePath() + "/src/test/java/" + someOutputPackageName.replaceAll("\\.", "/");
+		final String someReadingDirectory = "src/test/resources";
+		final String someWritingDirectory = "src/test/java/" + someOutputPackageName.replaceAll("\\.", "/");
 		new File(someWritingDirectory).mkdirs();
 		
         for (final String s : fileNames) {

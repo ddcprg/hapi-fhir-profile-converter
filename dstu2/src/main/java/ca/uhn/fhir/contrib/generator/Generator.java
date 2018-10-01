@@ -15,36 +15,6 @@
  */
 package ca.uhn.fhir.contrib.generator;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.dstu3.model.ElementDefinition;
-import org.hl7.fhir.dstu3.model.ElementDefinition.TypeRefComponent;
-import org.hl7.fhir.dstu3.model.Reference;
-import org.hl7.fhir.dstu3.model.StructureDefinition;
-import org.hl7.fhir.dstu3.model.UriType;
-import org.hl7.fhir.exceptions.FHIRException;
-import org.jboss.forge.roaster.Roaster;
-import org.jboss.forge.roaster.model.source.AnnotationSource;
-import org.jboss.forge.roaster.model.source.FieldSource;
-import org.jboss.forge.roaster.model.source.JavaClassSource;
-import org.jboss.forge.roaster.model.source.JavaEnumSource;
-import org.jboss.forge.roaster.model.source.MethodSource;
-
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
-import com.google.common.collect.FluentIterable;
-
 import ca.uhn.fhir.model.api.IDatatype;
 import ca.uhn.fhir.model.api.IResource;
 import ca.uhn.fhir.model.api.annotation.Child;
@@ -53,13 +23,30 @@ import ca.uhn.fhir.model.api.annotation.Extension;
 import ca.uhn.fhir.model.api.annotation.ResourceDef;
 import ca.uhn.fhir.model.primitive.BoundCodeDt;
 import ca.uhn.fhir.util.ElementUtil;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
+import com.google.common.collect.FluentIterable;
+import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.dstu3.model.ElementDefinition;
+import org.hl7.fhir.dstu3.model.Reference;
+import org.hl7.fhir.dstu3.model.StructureDefinition;
+import org.hl7.fhir.dstu3.model.UriType;
+import org.hl7.fhir.exceptions.FHIRException;
+import org.jboss.forge.roaster.Roaster;
+import org.jboss.forge.roaster.model.source.*;
+
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.util.*;
 
 public class Generator {
 
     private static final String STU3_PACKAGE = "org.hl7.fhir.dstu3.model";
     private static final String STU3_RESOURCE_PACKAGE = STU3_PACKAGE + "";
     private static final String STU3_COMPOSITE_PACKAGE = STU3_PACKAGE + ".composite";
-    
+
     public static final String HL7_FHIR_REFERENCE_URL_START = "http://hl7.org/fhir";
 
     public static JavaClassSource generate(final StructureDefinitionProvider resolver) throws Exception {
@@ -107,7 +94,7 @@ public class Generator {
             String genericType = null;
             if (field.getType().getTypeArguments().size() == 1) {
                 genericType = field.getType().getTypeArguments().get(0).getName();
-            } else if (field.getType().getTypeArguments().size() > 1){
+            } else if (field.getType().getTypeArguments().size() > 1) {
                 genericType = IDatatype.class.getName();
             }
             String type = field.getType().getName();
@@ -128,16 +115,16 @@ public class Generator {
                 for (final Method method : existingField.getMethods()) {
                     final String simpleType = genericType != null ? genericType : field.getType().getName();
                     if (method.getName().startsWith("get") && method.getName().endsWith("FirstRep")) {
-                        final String body = "if (get"+existingField.getOrigFieldName()+"().isEmpty()) {\n" +
-                                "    return add"+existingField.getOrigFieldName()+"();\n" +
+                        final String body = "if (get" + StringUtils.capitalize(existingField.getOrigFieldName()) + "().isEmpty()) {\n" +
+                                "    return add" + StringUtils.capitalize(existingField.getOrigFieldName()) + "();\n" +
                                 "}\n" +
-                                "return get"+existingField.getOrigFieldName()+"().get(0);";
+                                "return get" + StringUtils.capitalize(existingField.getOrigFieldName()) + "().get(0);";
                         addGetMethod(javaClass, method.getName(), simpleType, body, deprecate);
                     } else if (method.getName().startsWith("get") && method.getName().endsWith("Element")) {
-                        final String body = "if ("+field.getName()+" == null) {\n" +
-                                "     "+field.getName()+" = new "+type+"();\n" +
+                        final String body = "if (" + field.getName() + " == null) {\n" +
+                                "     " + field.getName() + " = new " + type + "();\n" +
                                 "    \n" +
-                                "return "+field.getName()+";";
+                                "return " + field.getName() + ";}";
                         addGetMethod(javaClass, method.getName(), type, body, deprecate);
                     } else if (method.getName().startsWith("get")) {
                         addGetMethod(javaClass, method.getName(), type, bodyGetSimple, deprecate);
@@ -151,8 +138,8 @@ public class Generator {
                             methodSet.addAnnotation(Deprecated.class);
                         }
                     } else if (method.getName().startsWith("add") && method.getParameterTypes().length == 0) {
-                        final String body = simpleType + " newType = new "+simpleType+"();\n" +
-                                "    get"+existingField.getOrigFieldName()+"().add(newType);\n" +
+                        final String body = simpleType + " newType = new " + simpleType + "();\n" +
+                                "    get" + StringUtils.capitalize(existingField.getOrigFieldName()) + "().add(newType);\n" +
                                 "return newType;";
                         addGetMethod(javaClass, method.getName(), simpleType, body, deprecate);
                     }
@@ -194,9 +181,11 @@ public class Generator {
 
     private String convertNameToValidJavaIdentifier(final String enumName) {
         final StringBuilder b = new StringBuilder();
-        for (final String part : enumName.split("[ ]")) {
-            b.append(StringUtils.capitalize(part));
-        }
+        if (enumName.contains(" "))
+            for (final String part : enumName.split("[ ]"))
+                b.append(StringUtils.capitalize(part));
+        else
+            b.append(StringUtils.capitalize(enumName));
         return b.toString().replaceAll("[ \\.\\?]", "");
     }
 
@@ -211,7 +200,7 @@ public class Generator {
     private void addField(final JavaClassSource javaClass, final Map<String, ResourceParser.FieldInfo> fieldInfo, final ElementDefinition element, final String elementName) {
         if (!element.getSlicing().getDiscriminator().isEmpty()) {
             sliced.add(element.getPath());
-            slicedPathToEnumType.put(element.getPath(), element.getShort());
+            slicedPathToEnumType.put(element.getPath(), element.getShort() != null ? element.getShort() : element.getId());
             lastSlicedValue = new CompositeValue(element.getPath(), element.getSlicing().getDescription());
             slicePathToValues.put(element.getPath(), lastSlicedValue);
         } else {
@@ -235,7 +224,15 @@ public class Generator {
             }
         }
 
-        final ResourceParser.FieldInfo inheritedField = fieldInfo.get(elementName.toLowerCase());
+        ResourceParser.FieldInfo inheritedField = fieldInfo.get(elementName.toLowerCase());
+
+        //Sliced values
+        if (inheritedField == null) {
+            inheritedField = fieldInfo.get(elementName.split("\\.")[0]);
+            return;
+
+        }
+
         final FieldSource<JavaClassSource> field = javaClass.addField().setName("my" + StringUtils.capitalize(elementName)).setPrivate();
         existingFieldsChanged.add(field);
         if (Collection.class.isAssignableFrom(inheritedField.getType())) {
@@ -249,11 +246,11 @@ public class Generator {
         } else {
             if (element.getBinding() != null && isBindingStrengthNotExample(element.getBinding()) && element.getBinding().getValueSet() instanceof Reference) {
                 final Reference ref = (Reference) element.getBinding().getValueSet();
-                if (ref.getReference().startsWith(HL7_FHIR_REFERENCE_URL_START)) {	
+                if (ref.getReference().startsWith(HL7_FHIR_REFERENCE_URL_START)) {
 //                    if (BoundCodeableConcept.class.isAssignableFrom(inheritedField.getType())) {
 //                        setFieldTypeGeneric(javaClass, inheritedField, field);
 //                    } else 
-                    	if (BoundCodeDt.class.isAssignableFrom(inheritedField.getType())) {
+                    if (BoundCodeDt.class.isAssignableFrom(inheritedField.getType())) {
                         setFieldTypeGeneric(javaClass, inheritedField, field);
                     } else {
                         field.setType(inheritedField.getType());
@@ -292,10 +289,10 @@ public class Generator {
         if (element.getType().size() > 1) {
             throw new IllegalStateException("WTF");
         } else {
-        	
-        		//unnamed slicing is currently not handled
+
+            //unnamed slicing is currently not handled
 //        		if(!element.getSlicing().isEmpty())
-        	
+
             if (element.getSliceName() == null) {
                 return;
             }
@@ -336,9 +333,8 @@ public class Generator {
                 return getSTU3ClassType(el.getTypeFirstRep());
             }
             //Sub extensions
-            else if(el.getPath().startsWith("Extension.extension") && el.getPath().contains("value"))
-            {
-            		return getSTU3ClassType(el.getTypeFirstRep());
+            else if (el.getPath().startsWith("Extension.extension") && el.getPath().contains("value")) {
+                return getSTU3ClassType(el.getTypeFirstRep());
             }
         }
         throw new IllegalArgumentException("Could not find extension type(s) for : " + element);

@@ -15,12 +15,14 @@
  */
 package com.systematic.healthcare.fhir.generator;
 
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 
 public class GeneratorTest {
 
+
     @Test
-    public void doesItWork(){
+    public void doesItWork() {
         //It works....
     }
 }
