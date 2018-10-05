@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ca.uhn.fhir.contrib.generator;
+package ca.uhn.fhir.contrib.generator.providers;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,13 +37,20 @@ public class FileStructureDefinitionProvider implements StructureDefinitionProvi
     }
 
     @Override
-	public String getOutPackage() {
+    public String getOutPackage() {
         return outPackage;
     }
 
     @Override
     public StructureDefinition getDefinition() throws IOException {
-        final IParser parser = context.newJsonParser();
+        final IParser parser;
+        if (structureFile.getName().endsWith("json"))
+            parser = context.newJsonParser();
+        else if (structureFile.getName().endsWith("xml"))
+            parser = context.newXmlParser();
+        else
+            throw new RuntimeException("Unhandled file extension");
+
         return parser.parseResource(StructureDefinition.class, fileToContentString(structureFile));
     }
 

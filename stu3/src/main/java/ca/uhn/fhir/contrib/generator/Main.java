@@ -18,6 +18,8 @@ package ca.uhn.fhir.contrib.generator;
 import java.io.File;
 import java.nio.file.Files;
 
+import ca.uhn.fhir.contrib.generator.providers.FileStructureDefinitionProvider;
+import ca.uhn.fhir.contrib.generator.providers.StructureDefinitionProvider;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
 
 public class Main {
@@ -25,7 +27,7 @@ public class Main {
 
 	public static void main(final String [] args) throws Exception {
 		final String someOutputPackageName = "ca.uhn.fhir.contrib.generator.generated";
-		final String [] fileNames = {"nl-core-patient.json"};
+		final String [] fileNames = {"MyPatient1.StructureDefinition.xml"};
 
 		System.out.println("Reading relative from: "  +new File(".").getAbsolutePath());
 		
