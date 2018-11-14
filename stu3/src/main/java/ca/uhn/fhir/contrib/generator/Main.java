@@ -27,7 +27,7 @@ public class Main {
 
 	public static void main(final String [] args) throws Exception {
 		final String someOutputPackageName = "ca.uhn.fhir.contrib.generator.generated";
-		final String [] fileNames = {"MyPatient1.StructureDefinition.xml"};
+		final String [] fileNames = {"MyPatient5.StructureDefinition.xml"};
 
 		System.out.println("Reading relative from: "  +new File(".").getAbsolutePath());
 		

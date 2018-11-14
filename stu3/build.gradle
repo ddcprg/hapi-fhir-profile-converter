@@ -14,9 +14,9 @@ repositories {
 }
 
 dependencies {
-    compile 'org.codehaus.groovy:groovy-all:2.4.5'
-    compile 'ca.uhn.hapi.fhir:hapi-fhir-base:1.3'
-    compile 'ca.uhn.hapi.fhir:hapi-fhir-structures-dstu2:1.3'
+    compile 'org.codehaus.groovy:groovy-all:2.5.2'
+    compile 'ca.uhn.hapi.fhir:hapi-fhir-base:3.5.0'
+    compile 'ca.uhn.hapi.fhir:hapi-fhir-structures-stu3:3.5.0'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     compile 'org.jboss.forge.roaster:roaster-api:2.17.2.Final'
